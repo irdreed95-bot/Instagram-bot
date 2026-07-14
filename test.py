@@ -1,64 +1,61 @@
-import requests
 import json
+import os
 
-print("🔄 جاري الاتصال بالسيرفر وفحص الـ API تلقائياً...")
+print("🔍 جاري قراءة وتحليل ملف next_data.json المحلي لاستخراج المنتجات...")
 
-# الرابط الذي سحبه البوت مالتنا بنجاح
-api_url = "https://web-api.app.fedshi.com/query"
-
-# ترويسة بسيطة وعامة جداً لتجنب أي تعقيد
-headers = {
-    "Content-Type": "application/json",
-    "Accept": "application/json"
-}
-
-# محاولة 1: طلب المنتجات بأسهل وأقصر صيغة ممكنة لمعرفة استجابة السيرفر
-payload_try_1 = {
-    "query": "{ products { id name price } }"
-}
-
-# محاولة 2: استعلام الفحص الذاتي (Introspection) لمعرفة أسماء الجداول بالسيرفر
-introspection_payload = {
-    "query": """
-    {
-      __schema {
-        queryType {
-          fields {
-            name
-          }
-        }
-      }
-    }
-    """
-}
+# التأكد من وجود الملف محلياً
+if not os.path.exists("next_data.json"):
+    print("❌ لم يتم العثور على ملف next_data.json.")
+    print("يرجى التأكد من تشغيل السكربت في المجلد الصحيح.")
+    exit()
 
 try:
-    print("⚡ 1. محاولة جلب قائمة المنتجات مباشرة...")
-    response = requests.post(api_url, json=payload_try_1, headers=headers, timeout=10)
+    with open("next_data.json", "r", encoding="utf-8") as f:
+        data = json.load(f)
     
-    if response.status_code == 200:
-        res_json = response.json()
-        print("✅ استجاب السيرفر بنجاح!")
-        print("📊 البيانات المستلمة:")
-        print(json.dumps(res_json, indent=2, ensure_ascii=False)[:1000]) # طباعة أول 1000 حرف
+    products_found = []
+    
+    # دالة ذكية للبحث عن قوائم المنتجات داخل الـ JSON
+    def search_deep(node, current_path=""):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                # البحث عن كلمات مفتاحية تدل على المنتجات
+                if k.lower() in ["products", "items", "productlist", "data_list", "rows"]:
+                    if isinstance(v, list) and len(v) > 0:
+                        products_found.append((current_path + f" -> {k}", v))
+                search_deep(v, current_path + f" -> {k}")
+        elif isinstance(node, list):
+            for i, item in enumerate(node):
+                search_deep(item, current_path + f"[{i}]")
+
+    search_deep(data)
+
+    if products_found:
+        print(f"\n🎉 تم اكتشاف {len(products_found)} قائمة منتجات بنجاح داخل الملف!")
+        for path, plist in products_found:
+            print(f"\n📌 المسار داخل الملف: {path}")
+            print(f"📦 عدد المنتجات المتوفرة: {len(plist)}")
+            print("-" * 50)
+            
+            # طباعة عينة من المنتجات لتراها بعينك
+            for index, prod in enumerate(plist[:5]):  # طباعة أول 5 منتجات
+                print(f"🔹 المنتج {index + 1}:")
+                if isinstance(prod, dict):
+                    name = prod.get("name") or prod.get("title") or prod.get("arName") or "بدون اسم"
+                    price = prod.get("price") or prod.get("wholesalePrice") or "غير محدد"
+                    sku = prod.get("sku") or prod.get("id") or "لا يوجد ID"
+                    print(f"   - الاسم: {name}")
+                    print(f"   - السعر: {price}")
+                    print(f"   - الكود (ID): {sku}")
+                else:
+                    print(f"   - تفاصيل: {prod}")
+            print("-" * 50)
     else:
-        print(f"⚠️ المحاولة الأولى لم تنجح (رمز الحالة {response.status_code}).")
-        print("⚡ 2. جاري محاولة فحص هيكل البيانات الداخلي (Introspection)...")
-        
-        # إذا فشلت المحاولة الأولى، نطلب من السيرفر أن يعطينا الأسماء المتاحة لديه
-        response_intro = requests.post(api_url, json=introspection_payload, headers=headers, timeout=10)
-        if response_intro.status_code == 200:
-            intro_json = response_intro.json()
-            print("✅ تم استخراج هيكل البيانات بنجاح!")
-            print("📝 الجداول والطلبات المتاحة في السيرفر:")
-            # استخراج أسماء الحقول المتاحة بالسيرفر
-            fields = intro_json.get("data", {}).get("__schema", {}).get("queryType", {}).get("fields", [])
-            for field in fields:
-                print(f"   - {field.get('name')}")
-        else:
-            print("❌ السيرفر يتطلب توثيق (Token/Login) أو ترويسات خاصة لعرض البيانات.")
-            print(f"رد السيرفر: {response_intro.text[:300]}")
+        print("\n⚠️ لم نجد هيكل منتجات بالأسماء القياسية، سنعرض لك محتوى الملف الأساسي:")
+        print("=" * 50)
+        print(json.dumps(data, indent=2, ensure_ascii=False)[:1200])
+        print("=" * 50)
 
 except Exception as e:
-    print(f"❌ حدث خطأ أثناء الاتصال: {e}")
+    print(f"❌ حدث خطأ أثناء قراءة البيانات: {e}")
     
