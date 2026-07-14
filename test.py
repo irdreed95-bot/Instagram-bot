@@ -1,61 +1,43 @@
 import json
 import os
+import re
 
-print("🔍 جاري قراءة وتحليل ملف next_data.json المحلي لاستخراج المنتجات...")
+print("🔍 جاري تصحيح الخطأ وفحص ملف page_source.html...")
 
-# التأكد من وجود الملف محلياً
-if not os.path.exists("next_data.json"):
-    print("❌ لم يتم العثور على ملف next_data.json.")
-    print("يرجى التأكد من تشغيل السكربت في المجلد الصحيح.")
+# 1. التأكد من وجود الملف الذي نمتلكه فعلاً في القائمة الجانبية
+if not os.path.exists("page_source.html"):
+    print("❌ لم يتم العثور على ملف page_source.html.")
     exit()
 
 try:
-    with open("next_data.json", "r", encoding="utf-8") as f:
-        data = json.load(f)
-    
-    products_found = []
-    
-    # دالة ذكية للبحث عن قوائم المنتجات داخل الـ JSON
-    def search_deep(node, current_path=""):
-        if isinstance(node, dict):
-            for k, v in node.items():
-                # البحث عن كلمات مفتاحية تدل على المنتجات
-                if k.lower() in ["products", "items", "productlist", "data_list", "rows"]:
-                    if isinstance(v, list) and len(v) > 0:
-                        products_found.append((current_path + f" -> {k}", v))
-                search_deep(v, current_path + f" -> {k}")
-        elif isinstance(node, list):
-            for i, item in enumerate(node):
-                search_deep(item, current_path + f"[{i}]")
+    # 2. قراءة محتوى صفحة الويب اللي سحبها البوت
+    with open("page_source.html", "r", encoding="utf-8") as f:
+        html_content = f.read()
 
-    search_deep(data)
+    # 3. استخراج البيانات السرية الخاصة بـ Next.js
+    print("🕵️ جاري البحث عن كنز البيانات المخفي (__NEXT_DATA__)...")
+    match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html_content, re.DOTALL)
 
-    if products_found:
-        print(f"\n🎉 تم اكتشاف {len(products_found)} قائمة منتجات بنجاح داخل الملف!")
-        for path, plist in products_found:
-            print(f"\n📌 المسار داخل الملف: {path}")
-            print(f"📦 عدد المنتجات المتوفرة: {len(plist)}")
-            print("-" * 50)
+    if match:
+        print("✅ ممتاز! تم العثور على البيانات المخفية داخل الصفحة.")
+        json_data = json.loads(match.group(1))
+        
+        # 4. هنا نقوم بصناعة الملف الذي كان مفقوداً!
+        with open("next_data.json", "w", encoding="utf-8") as out:
+            json.dump(json_data, out, ensure_ascii=False, indent=2)
+        
+        print("💾 تم إنشاء وحفظ ملف 'next_data.json' بنجاح! (ستلاحظ ظهوره في القائمة الجانبية)")
+        
+        # 5. استخراج وعرض نظرة سريعة على البيانات
+        props = json_data.get("props", {}).get("pageProps", {})
+        print("\n📊 الأقسام التي تم استخراجها من الصفحة:")
+        for key in props.keys():
+            print(f" 🔹 {key}")
             
-            # طباعة عينة من المنتجات لتراها بعينك
-            for index, prod in enumerate(plist[:5]):  # طباعة أول 5 منتجات
-                print(f"🔹 المنتج {index + 1}:")
-                if isinstance(prod, dict):
-                    name = prod.get("name") or prod.get("title") or prod.get("arName") or "بدون اسم"
-                    price = prod.get("price") or prod.get("wholesalePrice") or "غير محدد"
-                    sku = prod.get("sku") or prod.get("id") or "لا يوجد ID"
-                    print(f"   - الاسم: {name}")
-                    print(f"   - السعر: {price}")
-                    print(f"   - الكود (ID): {sku}")
-                else:
-                    print(f"   - تفاصيل: {prod}")
-            print("-" * 50)
+        print("\n🚀 عاشت إيدك! الآن صار عندنا الداتا الحقيقية، جاهزين نسحب منها المنتجات بالتفصيل.")
     else:
-        print("\n⚠️ لم نجد هيكل منتجات بالأسماء القياسية، سنعرض لك محتوى الملف الأساسي:")
-        print("=" * 50)
-        print(json.dumps(data, indent=2, ensure_ascii=False)[:1200])
-        print("=" * 50)
-
+        print("⚠️ لم نجد وسم __NEXT_DATA__. يبدو أن الصفحة التي تم سحبها فارغة أو تحتاج توجيه مختلف.")
+        
 except Exception as e:
-    print(f"❌ حدث خطأ أثناء قراءة البيانات: {e}")
+    print(f"❌ حدث خطأ: {e}")
     
