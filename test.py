@@ -1,36 +1,51 @@
 import requests
-from bs4 import BeautifulSoup
-import json
 
-# راح نستهدف الموقع الرئيسي مباشرة
-url = "https://fedshi.com/" 
+url = "https://web-api.app.fedshi.com/query"
 
 headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "Content-Type": "application/json"
 }
 
-print("🚀 جاري سحب الصفحة واستخراج البيانات المخفية...")
+# استعلام ذكي يجيب بس الأوامر (الـ Queries) المتاحة بالسيرفر
+payload = {
+    "query": """
+    {
+      __schema {
+        queryType {
+          fields {
+            name
+          }
+        }
+      }
+    }
+    """
+}
+
+print("🚀 جاري البحث عن أمر سحب المنتجات من السيرفر...")
 
 try:
-    response = requests.get(url, headers=headers)
-    # استخدام المكتبة لتحليل الصفحة
-    soup = BeautifulSoup(response.text, 'html.parser')
+    response = requests.post(url, headers=headers, json=payload)
     
-    # البحث عن الكنز (البيانات المخفية)
-    next_data = soup.find('script', id='__NEXT_DATA__')
-    
-    if next_data:
-        # تحويل النص إلى بيانات مقروءة
-        data = json.loads(next_data.text)
-        print("✅ كفو! تم العثور على البيانات بنجاح.")
+    if response.status_code == 200:
+        data = response.json()
+        fields = data.get("data", {}).get("__schema", {}).get("queryType", {}).get("fields", [])
         
-        # حفظ البيانات بملف حتى نقدر نفحصها براحتنا
-        with open("fedshi_data.json", "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-            
-        print("🎉 تم حفظ المنتجات في ملف fedshi_data.json بالقائمة الجانبية.")
+        print("✅ لقينا هاي الأوامر اللي تخص المنتجات والأقسام:")
+        found = False
+        for f in fields:
+            name = f.get("name", "")
+            # نبحث بس عن الكلمات اللي تفيدنا حتى ما تنترس الشاشة
+            if "product" in name.lower() or "categor" in name.lower() or "item" in name.lower():
+                print(f" 🎯 {name}")
+                found = True
+                
+        if not found:
+            print("⚠️ ما لقينا كلمة Product.. خلي نطبع أول 15 أمر موجود:")
+            for f in fields[:15]: 
+                print(f" - {f.get('name')}")
     else:
-        print("❌ ما لقينا سكربت __NEXT_DATA__ بالصفحة.")
+        print(f"❌ السيرفر رفض الطلب: {response.status_code}")
 
 except Exception as e:
     print(f"❌ حدث خطأ: {e}")
