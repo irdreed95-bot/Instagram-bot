@@ -7,48 +7,35 @@ headers = {
     "Content-Type": "application/json"
 }
 
-print("🚀 جاري تنفيذ الحل الشامل... (الكود ديجرب كل الاحتمالات بصمت، ثواني وراجعلك)")
+print("🚀 جاري سحب التفاصيل الكاملة (صور، أسعار، تفاصيل)...")
 
-# قائمة بكل الاحتمالات اللي ممكن السيرفر يطلبها (الكود راح يجربها كلها بدون ما يطلعلك أي خطأ)
+# الكود راح يجرب أشهر الأسماء البرمجية للصور والأسعار
 payloads = [
-    'query { ListProducts(Request: { Page: 1, PageSize: 10 }) { Products { ID Name } } }',
-    'query { ListProducts(Request: { Page: 1, Size: 10 }) { Products { ID Name } } }',
-    'query { ListProducts(Request: { Page: 1, PerPage: 10 }) { Products { ID Name } } }',
-    'query { ListProducts(Request: { Page: 1, Take: 10 }) { Products { ID Name } } }',
-    'query { ListProducts(Request: { Page: 1 }) { Products { ID Name } } }'
+    'query { ListProducts(Request: { Page: 1 }) { Products { ID Name Price Images } } }',
+    'query { ListProducts(Request: { Page: 1 }) { Products { ID Name Price Image } } }',
+    'query { ListProducts(Request: { Page: 1 }) { Products { ID Name Price { Value } Images { Url } } } }'
 ]
 
 success = False
-
 for query_str in payloads:
     try:
         response = requests.post(url, headers=headers, json={"query": query_str})
         data = response.json()
         
-        # إذا السيرفر رجع داتا حقيقية وماكو أخطاء
+        # إذا السيرفر رجع البيانات بدون خطأ
         if "errors" not in data and data.get("data"):
             success = True
-            print("\n🎉🎉🎉 أخييييراً! نجحت العملية وكسرنا الحماية!")
             
-            # حفظ البيانات بملف نظيف وجاهز
             with open("final_products.json", "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
                 
-            print("✅ تم سحب المنتجات وحفظها بملف: final_products.json (تلكاه بالقائمة الجانبية)")
-            
-            # طباعة عينة من المنتجات للتأكيد
-            products = data["data"]["ListProducts"]["Products"]
-            if products:
-                print("\n🛒 عينة من المنتجات اللي انسحبت:")
-                for p in products[:3]:
-                    print(f" 🔹 {p.get('Name')}")
-            break # نوقف المحاولات لأن نجحنا
+            print("✅ تم سحب التفاصيل الكاملة بنجاح!")
+            print("📦 افتح ملف final_products.json وشوف إذا الصور والأسعار موجودة.")
+            break 
             
     except Exception:
-        # إذا صار خطأ، الكود راح يغلس ويعبر عالمحاولة اللي بعدها بدون ما يزعجك
         continue 
 
 if not success:
-    print("\n❌ السيرفر قافل قفلة نهائية ويحتاج رمز دخول (Token).")
-    print("الموقع محمي بدرجة عالية، والحل الوحيد الباقي هو ننسخ كود الـ Token من متصفحك.")
+    print("⚠️ السيرفر يحتاج تسمية معينة للصور أو الأسعار، افتح الملف وشوف شنو اللي نزل.")
     
