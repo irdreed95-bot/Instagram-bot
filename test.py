@@ -4,31 +4,41 @@ import json
 url = "https://web-api.app.fedshi.com/query"
 
 headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "User-Agent": "Mozilla/5.0",
     "Content-Type": "application/json"
 }
 
-print("🚀 لقينا المفتاح السري (ListProducts)! جاري فتح المخزن...")
+print("📦 السيرفر انطانا صندوق (ProductListResponse)، جاري البحث عن المنتجات بداخله...")
 
-# استخدمنا الأمر اللي السيرفر فضح نفسه بيه
-payload = {
-    "query": "query { ListProducts { id } }"
-}
+# طرق فتح الصندوق المشهورة برمجياً
+queries = [
+    "query { ListProducts { items { id name } } }",
+    "query { ListProducts { data { id name } } }",
+    "query { ListProducts { products { id name } } }",
+    "query { ListProducts { edges { node { id name } } } }",
+    "query { ListProducts { nodes { id name } } }"
+]
 
-try:
-    response = requests.post(url, headers=headers, json=payload)
-    data = response.json()
+for q in queries:
+    print(f"\n🔄 نجرب نفتح الصندوق بـ: {q}")
+    payload = {"query": q}
     
-    # إذا السيرفر انطانا الداتا بدون أخطاء
-    if "errors" not in data:
-        print("🎉🎉 بوم! المخزن انفتح والمنتجات كدامنا:")
-        print(json.dumps(data, indent=2, ensure_ascii=False)[:800])
-    else:
-        # إذا السيرفر طلب متغيرات إضافية (مثل رقم الصفحة أو غيره)
-        error_msg = data['errors'][0].get('message', 'خطأ غير معروف')
-        print("⚠️ السيرفر تعرف على الأمر، بس طلب تفاصيل أكثر:")
-        print(f"الرد: {error_msg}")
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        data = response.json()
         
-except Exception as e:
-    print(f"❌ حدث خطأ بالاتصال: {e}")
-    
+        # إذا السيرفر ما رجع خطأ، معناها فتحنا الصندوق!
+        if "errors" not in data:
+            print("🎉🎉🎉 بوم! كسرنا الصندوق وطلعت المنتجات!")
+            # نطبع أول 800 حرف حتى ما تنترس شاشتك بالتليفون
+            print(json.dumps(data, indent=2, ensure_ascii=False)[:800])
+            break 
+        else:
+            error_msg = data['errors'][0].get('message', 'خطأ')
+            # السيرفر مرات يفضح الاسم الصحيح برسالة الخطأ
+            print(f"❌ مو هذا المفتاح، الرد: {error_msg[:100]}")
+            
+    except Exception as e:
+        print(f"❌ حدث خطأ بالاتصال.")
+        
+print("\n🏁 انتهى الفحص.")
