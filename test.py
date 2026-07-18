@@ -3,41 +3,31 @@ import json
 
 url = "https://web-api.app.fedshi.com/query"
 
+# ضفنا User-Agent مال تليفون حقيقي حتى السيرفر يطمن أكثر
 headers = {
-    "User-Agent": "Mozilla/5.0",
+    "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
     "Content-Type": "application/json"
 }
 
-print("🚀 جاري طلب الصفحة رقم 1 من المنتجات...")
+print("🚀 جاري إضافة Limit للطلب حتى لا ينهار سيرفر فدشي...")
 
-# التعديل السحري: ضفنا Page: 1 بداخل الـ Request
+# ضفنا Limit: 10 بداخل الـ Request
 payload = {
-    "query": "query { ListProducts(Request: { Page: 1 }) { Products { ID Name } } }"
+    "query": "query { ListProducts(Request: { Page: 1, Limit: 10 }) { Products { ID Name } } }"
 }
 
 try:
     response = requests.post(url, headers=headers, json=payload)
     data = response.json()
     
-    # إذا ماكو أخطاء، معناها فتحنا المخزن وأخذنا المنتجات!
-    if "errors" not in data:
-        print("🎉🎉🎉 كفوووو! السيرفر قبل الطلب وفتحنا المخزن!")
-        
-        # نحفظ المنتجات بملف حتى نستخدمها للبوت
-        with open("final_products.json", "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-            
-        print("✅ تم سحب المنتجات وحفظها في ملف 'final_products.json' بالقائمة الجانبية.")
-        
-        # نطبع أول 3 منتجات بس حتى تشوفهم بعينك
-        products = data.get("data", {}).get("ListProducts", {}).get("Products", [])
-        print("\n🛒 عينة من المنتجات اللي سحبناها:")
-        for p in products[:3]:
-            print(f"- رقم المنتج: {p.get('ID')} | الاسم: {p.get('Name')}")
-            
+    # إذا السيرفر رجع خطأ، خلي نشوف شنو هو
+    if "errors" in data:
+        print("⚠️ السيرفر رجع رسالة:")
+        print(json.dumps(data['errors'], indent=2, ensure_ascii=False))
     else:
-        print("⚠️ السيرفر طلب تعديل جديد، هذا رده:")
-        print(json.dumps(data, indent=2, ensure_ascii=False))
+        print("🎉🎉🎉 كفوووو! السيرفر استقر وفتحنا المخزن!")
+        print("\n📦 الرد من السيرفر:")
+        print(json.dumps(data, indent=2, ensure_ascii=False)[:1000])
         
 except Exception as e:
     print(f"❌ حدث خطأ بالاتصال: {e}")
