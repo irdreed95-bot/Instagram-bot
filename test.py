@@ -7,16 +7,16 @@ headers = {
     "Content-Type": "application/json"
 }
 
-print("🕵️‍♂️ السيرفر قافل الخريطة، بس راح نجبره يفضح الأسماء بالخطأ...")
+print("🕵️‍♂️ جاري إجبار السيرفر على كشف اسم رابط الصورة...")
 
-# حطينا Images بدون تفاصيلها حتى يعترض، وحطينا كل كلمات السعر حتى يصلحلنا
+# حطينا TestLink بداخل أقواس الصور حتى يعترض ويصلحلنا الغلط
 payload = {
-    "query": "query { ListProducts(Request: { Page: 1 }) { Products { ID Name Images Price Cost Pricing Total PriceList } } }"
+    "query": "query { ListProducts(Request: { Page: 1 }) { Products { ID Name RRPPrice Images { TestLink } } } }"
 }
 
 try:
     response = requests.post(url, headers=headers, json=payload)
-    print("\n📦 رد السيرفر (ركز على قسم errors):")
+    print("\n📦 رد السيرفر (ركز هنا راح يگولنا شنو الاسم الصحيح بدل TestLink):")
     print(json.dumps(response.json(), indent=2, ensure_ascii=False))
 except Exception as e:
     print(f"❌ خطأ: {e}")
