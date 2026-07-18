@@ -8,20 +8,20 @@ headers = {
     "Content-Type": "application/json"
 }
 
-print("🚀 جاري إرسال الطلب بالصيغة الرسمية اللي طلبها السيرفر...")
+print("🚀 جاري طلب الصفحة رقم 1 من المنتجات...")
 
-# ضفنا (Request: {}) مثل ما طلب، وسوينا الحروف كبيرة ID و Name
+# التعديل السحري: ضفنا Page: 1 بداخل الـ Request
 payload = {
-    "query": "query { ListProducts(Request: {}) { Products { ID Name } } }"
+    "query": "query { ListProducts(Request: { Page: 1 }) { Products { ID Name } } }"
 }
 
 try:
     response = requests.post(url, headers=headers, json=payload)
     data = response.json()
     
-    # إذا ماكو أخطاء، معناها فتحنا المخزن أخيراً!
+    # إذا ماكو أخطاء، معناها فتحنا المخزن وأخذنا المنتجات!
     if "errors" not in data:
-        print("🎉🎉🎉 أخيييييراً! نجحنا والمخزن انفتح!")
+        print("🎉🎉🎉 كفوووو! السيرفر قبل الطلب وفتحنا المخزن!")
         
         # نحفظ المنتجات بملف حتى نستخدمها للبوت
         with open("final_products.json", "w", encoding="utf-8") as f:
@@ -29,10 +29,10 @@ try:
             
         print("✅ تم سحب المنتجات وحفظها في ملف 'final_products.json' بالقائمة الجانبية.")
         
-        # نطبع أول منتجين بس حتى تشوفهم بعينك
+        # نطبع أول 3 منتجات بس حتى تشوفهم بعينك
         products = data.get("data", {}).get("ListProducts", {}).get("Products", [])
         print("\n🛒 عينة من المنتجات اللي سحبناها:")
-        for p in products[:2]:
+        for p in products[:3]:
             print(f"- رقم المنتج: {p.get('ID')} | الاسم: {p.get('Name')}")
             
     else:
