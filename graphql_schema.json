@@ -1,0 +1,13 @@
+{
+  "errors": [
+    {
+      "message": "introspection disabled",
+      "path": [
+        "__schema"
+      ]
+    }
+  ],
+  "data": {
+    "__schema": null
+  }
+}
