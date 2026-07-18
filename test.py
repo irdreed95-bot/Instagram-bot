@@ -3,39 +3,24 @@ import json
 
 url = "https://web-api.app.fedshi.com/query"
 headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "User-Agent": "Mozilla/5.0",
     "Content-Type": "application/json"
 }
 
-print("🚀 جاري سحب التفاصيل الكاملة (صور، أسعار، تفاصيل)...")
+print("🔍 جاري استفزاز السيرفر حتى يفضح أسماء حقول السعر والصور الحقيقية...")
 
-# الكود راح يجرب أشهر الأسماء البرمجية للصور والأسعار
-payloads = [
-    'query { ListProducts(Request: { Page: 1 }) { Products { ID Name Price Images } } }',
-    'query { ListProducts(Request: { Page: 1 }) { Products { ID Name Price Image } } }',
-    'query { ListProducts(Request: { Page: 1 }) { Products { ID Name Price { Value } Images { Url } } } }'
-]
+# تعمدنا نكتب PriceTest و ImageTest حتى السيرفر يصلحلنا الغلط
+payload = {
+    "query": "query { ListProducts(Request: { Page: 1 }) { Products { ID Name PriceTest ImageTest } } }"
+}
 
-success = False
-for query_str in payloads:
-    try:
-        response = requests.post(url, headers=headers, json={"query": query_str})
-        data = response.json()
+try:
+    response = requests.post(url, headers=headers, json=payload)
+    data = response.json()
+    
+    print("\n📦 رد السيرفر الفضاح:")
+    print(json.dumps(data, indent=2, ensure_ascii=False))
         
-        # إذا السيرفر رجع البيانات بدون خطأ
-        if "errors" not in data and data.get("data"):
-            success = True
-            
-            with open("final_products.json", "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-                
-            print("✅ تم سحب التفاصيل الكاملة بنجاح!")
-            print("📦 افتح ملف final_products.json وشوف إذا الصور والأسعار موجودة.")
-            break 
-            
-    except Exception:
-        continue 
-
-if not success:
-    print("⚠️ السيرفر يحتاج تسمية معينة للصور أو الأسعار، افتح الملف وشوف شنو اللي نزل.")
+except Exception as e:
+    print(f"❌ خطأ: {e}")
     
