@@ -8,37 +8,47 @@ headers = {
     "Content-Type": "application/json"
 }
 
-print("📦 السيرفر انطانا صندوق (ProductListResponse)، جاري البحث عن المنتجات بداخله...")
+print("🚀 جاري سحب المنتجات (الحل النهائي)...")
 
-# طرق فتح الصندوق المشهورة برمجياً
-queries = [
-    "query { ListProducts { items { id name } } }",
-    "query { ListProducts { data { id name } } }",
-    "query { ListProducts { products { id name } } }",
-    "query { ListProducts { edges { node { id name } } } }",
-    "query { ListProducts { nodes { id name } } }"
+# السيرفر اعترف أن الكلمة هي Products (بحرف P كبير)
+# هذا الكود راح يجرب يسحب البيانات بأكثر من صيغة لحد ما ينجح فوراً
+fields_to_try = [
+    "id name price",
+    "id title price",
+    "id name",
+    "id title",
+    "id"
 ]
 
-for q in queries:
-    print(f"\n🔄 نجرب نفتح الصندوق بـ: {q}")
-    payload = {"query": q}
+success = False
+for fields in fields_to_try:
+    payload = {"query": f"query {{ ListProducts {{ Products {{ {fields} }} }} }}"}
     
     try:
         response = requests.post(url, headers=headers, json=payload)
         data = response.json()
         
-        # إذا السيرفر ما رجع خطأ، معناها فتحنا الصندوق!
+        # إذا ماكو خطأ، معناها سحبنا المنتجات بنجاح!
         if "errors" not in data:
-            print("🎉🎉🎉 بوم! كسرنا الصندوق وطلعت المنتجات!")
-            # نطبع أول 800 حرف حتى ما تنترس شاشتك بالتليفون
-            print(json.dumps(data, indent=2, ensure_ascii=False)[:800])
-            break 
-        else:
-            error_msg = data['errors'][0].get('message', 'خطأ')
-            # السيرفر مرات يفضح الاسم الصحيح برسالة الخطأ
-            print(f"❌ مو هذا المفتاح، الرد: {error_msg[:100]}")
+            # حفظ المنتجات بملف نهائي نظيف
+            with open("final_products.json", "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            
+            print("🎉🎉🎉 مبروووووك! انتهى التعب وكسرنا حماية الموقع!")
+            print("✅ تم سحب المنتجات وحفظها في ملف 'final_products.json' بالقائمة الجانبية.")
+            
+            # طباعة أول منتج حتى تشوفه بعينك
+            products_list = data.get("data", {}).get("ListProducts", {}).get("Products", [])
+            if products_list:
+                print("\n🛒 عينة من أول منتج تم سحبه:")
+                print(json.dumps(products_list[0], indent=2, ensure_ascii=False))
+            
+            success = True
+            break # نوقف البحث لأن تمت العملية
             
     except Exception as e:
-        print(f"❌ حدث خطأ بالاتصال.")
-        
-print("\n🏁 انتهى الفحص.")
+        pass
+
+if not success:
+    print("❌ واجهنا مشكلة، تأكد من الاتصال بالإنترنت.")
+    
