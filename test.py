@@ -18,25 +18,24 @@ with open(html_file, "r", encoding="utf-8") as f:
 
 products_list = []
 
-# استخراج المنتجات (نبحث عن أي عناصر تحتوي على بيانات المنتجات أو الصور والأسعار)
-# هذا الكود يستخرج الروابط والصور والأسماء من ملف الصفحة مباشرة
+# استخراج المنتجات
 items = soup.find_all(['div', 'article', 'li'])
 
 counter = 1
 for item in items:
-    # محاولة البحث عن اسم المنتج، السعر، والصورة داخل عناصر الصفحة
+    # محاولة البحث عن اسم المنتج، السعر، والصورة
     img_tag = item.find('img')
     if img_tag and (img_tag.get('src') or img_tag.get('data-src')):
         img_url = img_tag.get('src') or img_tag.get('data-src')
         
-        # محاولة إيجاد النص (الاسم أو السعر)
+        # محاولة إيجاد النص (الاسم)
         text_content = item.get_text(strip=True)
         if len(text_content) > 3:
-            products_list.println = True
+            # هنا صلحنا الخطأ المطبعي ومسحنا السطر الغلط
             products_list.append({
                 "ID": str(counter),
-                "Name": text_content[:50], # أخذ أول أول 50 حرف كاسم للمنتج
-                "RRPPrice": "10000", # سعر افتراضي مؤقت تگدر تعدله
+                "Name": text_content[:50], # أخذ أول 50 حرف كاسم للمنتج
+                "RRPPrice": "10000", # سعر افتراضي
                 "Images": [{"URL": img_url}]
             })
             counter += 1
@@ -54,7 +53,6 @@ if len(products_list) > 0:
     print(f"\n🎉 تم استخراج {len(products_list)} منتج بنجاح وحفظها في final_products.json!")
 else:
     print("⚠️ لم يتم العثور على منتجات بالطريقة التقليدية، جاري إنشاء بيانات تجريبية لننتقل للانستغرام فوراً.")
-    # بيانات تجريبية لضمان عمل بوت الانستغرام حالاً
     dummy_data = {
         "data": {
             "ListProducts": {
