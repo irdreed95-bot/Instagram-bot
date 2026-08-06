@@ -40,4 +40,4 @@ for field in image_fields:
 
 if not success:
     print("⚠️ ولا كلمة نجحت! المبرمج مستخدم اسم غريب جداً.")
-    
+
