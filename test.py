@@ -1,32 +1,75 @@
+from bs4 import BeautifulSoup
 import json
+import os
 
-print("🕵️‍♂️ جاري التفتيش الشامل داخل الخريطة (بدون الاعتماد على ترتيب السيرفر)...")
+print("🔍 جاري قراءة المنتجات مباشرة من ملف الموقع المحفوظ...")
 
-def find_login_info(obj):
-    # دالة تبحث بكل زوايا الملف عن أي شي بي تسجيل دخول
-    if isinstance(obj, dict):
-        name = obj.get("name")
-        if isinstance(name, str) and any(x in name.lower() for x in ["login", "auth", "signin", "token"]):
-            print(f"\n🎉 لقينا ثغرة الدخول! اسمها: {name}")
-            args = obj.get("args")
-            if args:
-                print("👇 السيرفر يطلب هاي المعلومات حتى نسجل دخول:")
-                for arg in args:
-                    print(f"  - محتاج: {arg.get('name')}")
+# التأكد من وجود ملف الصفحة
+html_file = "live_page.html"
+if not os.path.exists(html_file):
+    html_file = "page_source.html"
+
+if not os.path.exists(html_file):
+    print("❌ لم يتم العثور على ملف HTML في القائمة الجانبية.")
+    exit()
+
+with open(html_file, "r", encoding="utf-8") as f:
+    soup = BeautifulSoup(f.read(), "html.parser")
+
+products_list = []
+
+# استخراج المنتجات (نبحث عن أي عناصر تحتوي على بيانات المنتجات أو الصور والأسعار)
+# هذا الكود يستخرج الروابط والصور والأسماء من ملف الصفحة مباشرة
+items = soup.find_all(['div', 'article', 'li'])
+
+counter = 1
+for item in items:
+    # محاولة البحث عن اسم المنتج، السعر، والصورة داخل عناصر الصفحة
+    img_tag = item.find('img')
+    if img_tag and (img_tag.get('src') or img_tag.get('data-src')):
+        img_url = img_tag.get('src') or img_tag.get('data-src')
         
-        # كمل بحث بالباقي
-        for value in obj.values():
-            find_login_info(value)
-            
-    elif isinstance(obj, list):
-        for item in obj:
-            find_login_info(item)
+        # محاولة إيجاد النص (الاسم أو السعر)
+        text_content = item.get_text(strip=True)
+        if len(text_content) > 3:
+            products_list.println = True
+            products_list.append({
+                "ID": str(counter),
+                "Name": text_content[:50], # أخذ أول أول 50 حرف كاسم للمنتج
+                "RRPPrice": "10000", # سعر افتراضي مؤقت تگدر تعدله
+                "Images": [{"URL": img_url}]
+            })
+            counter += 1
 
-try:
-    with open("graphql_schema.json", "r", encoding="utf-8") as f:
-        schema_data = json.load(f)
-        find_login_info(schema_data)
-        print("\n✅ انتهى الفحص الشامل!")
-except Exception as e:
-    print(f"❌ خطأ: {e}")
+if len(products_list) > 0:
+    final_data = {
+        "data": {
+            "ListProducts": {
+                "Products": products_list
+            }
+        }
+    }
+    with open("final_products.json", "w", encoding="utf-8") as f:
+        json.dump(final_data, f, ensure_ascii=False, indent=2)
+    print(f"\n🎉 تم استخراج {len(products_list)} منتج بنجاح وحفظها في final_products.json!")
+else:
+    print("⚠️ لم يتم العثور على منتجات بالطريقة التقليدية، جاري إنشاء بيانات تجريبية لننتقل للانستغرام فوراً.")
+    # بيانات تجريبية لضمان عمل بوت الانستغرام حالاً
+    dummy_data = {
+        "data": {
+            "ListProducts": {
+                "Products": [
+                    {
+                        "ID": "1",
+                        "Name": "منتج تجريبي من البوت",
+                        "RRPPrice": "15000",
+                        "Images": [{"URL": "https://via.placeholder.com/600"}]
+                    }
+                ]
+            }
+        }
+    }
+    with open("final_products.json", "w", encoding="utf-8") as f:
+        json.dump(dummy_data, f, ensure_ascii=False, indent=2)
+    print("✅ تم إنشاء ملف final_products.json بنجاح وجاهز للربط!")
 
