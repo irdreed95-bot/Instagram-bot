@@ -7,23 +7,20 @@ headers = {
     "Content-Type": "application/json"
 }
 
-# الكلمة الصحيحة للرابط هي URL بحروف كبيرة
+# راح نطلب الـ URL ونشوف السيرفر شنو راح يجاوبنا حرفياً
 payload = {
     "query": 'query { ListProducts(Request: { Page: 1 }) { Products { ID Name RRPPrice Images { URL } } } }'
 }
 
-print("🚀 جاري سحب المنتجات وحفظها (مع تجاهل تحذيرات السيرفر)...")
+print("🔍 جاري قراءة عقل السيرفر وطباعة رده بالكامل...")
+
 try:
     response = requests.post(url, headers=headers, json=payload)
     data = response.json()
     
-    # إذا اكو بيانات، احفظها فوراً ولا تهتم لأي رسائل ثانية
-    if data.get("data") and data["data"].get("ListProducts"):
-        with open("final_products.json", "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        print("✅ تم السحب بنجاح! ملف final_products.json صار جاهز ومكتمل.")
-    else:
-        print("❌ السيرفر ما رجع أي بيانات.")
+    # هذا الأمر راح يطبع كل شي يرجعه السيرفر (أخطاء، بيانات، تلميحات)
+    print(json.dumps(data, indent=2, ensure_ascii=False))
+    
 except Exception as e:
     print(f"❌ خطأ: {e}")
-    
+
