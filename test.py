@@ -1,5 +1,6 @@
 import requests
 import json
+import re
 
 url = "https://web-api.app.fedshi.com/query"
 headers = {
@@ -7,15 +8,19 @@ headers = {
     "Content-Type": "application/json"
 }
 
-print("🕵️‍♂️ السيرفر غلس وما انطانا تلميح... جاري كسر الحقل بتجربة أشهر الكلمات تلقائياً...")
+print("🚀 جاري الفحص الذكي التلقائي لحقل الصور...")
 
-# قائمة بأشهر الأسماء اللي يستخدموها المبرمجين لروابط الصور
-image_fields = ["URL", "url", "Url", "path", "Path", "src", "link", "file", "id", "ID"]
+# قائمة بالأسماء المركبة الشائعة في GraphQL
+candidates = [
+    "FileUrl", "fileUrl", "FullUrl", "fullUrl", "FileName", "fileName", 
+    "Name", "name", "Key", "key", "Location", "location", "URI", "uri", 
+    "Source", "source", "FilePath", "filePath", "OriginalUrl", "originalUrl",
+    "FileLocation", "ImageLocation"
+]
 
 success = False
 
-for field in image_fields:
-    # الكود راح يعوض الكلمة بدل المتغير (field) ويجرب
+for field in candidates:
     payload = {
         "query": f"query {{ ListProducts(Request: {{ Page: 1 }}) {{ Products {{ ID Name RRPPrice Images {{ {field} }} }} }} }}"
     }
@@ -24,20 +29,39 @@ for field in image_fields:
         res = requests.post(url, headers=headers, json=payload)
         data = res.json()
         
-        # إذا السيرفر رجع البيانات بدون أخطاء، معناها لقفنا الكلمة الصح!
+        # 1. إذا نجح الكود بدون أي أخطاء
         if "errors" not in data and data.get("data"):
-            print(f"\n🎉🎉 لقفناهااا! الكلمة الصحيحة لرابط الصورة هي: {field}")
-            
+            print(f"\n🎉🎉🎉 أبشرررر! الكلمة الصحيحة لرابط الصورة هي: {field}")
             with open("final_products.json", "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
-                
-            print("✅ تم سحب المنتجات بالكامل (الاسم، السعر، الصور) بملف final_products.json!")
+            print("✅ تم سحب المنتجات كاملة وحفظها بملف final_products.json!")
             success = True
-            break # نوقف المحاولات فوراً
+            break
             
+        # 2. إذا طلع خطأ، البايثون راح يبحث بداخل الخطأ عن اقتراح "Did you mean"
+        errors_str = json.dumps(data.get("errors", []))
+        match = re.search(r'Did you mean [\\"]*([^"\\]+)[\\"]*\?', errors_str)
+        if match:
+            suggested = match.group(1)
+            print(f"💡 السيرفر اقترح كلمة: {suggested}! جاري التجربة فوراً...")
+            
+            p_payload = {
+                "query": f"query {{ ListProducts(Request: {{ Page: 1 }}) {{ Products {{ ID Name RRPPrice Images {{ {suggested} }} }} }} }}"
+            }
+            res2 = requests.post(url, headers=headers, json=p_payload)
+            data2 = res2.json()
+            
+            if "errors" not in data2 and data2.get("data"):
+                print(f"\n🎉🎉🎉 أخيرررراً تم السحب بنجاح باستخدام: {suggested}")
+                with open("final_products.json", "w", encoding="utf-8") as f:
+                    json.dump(data2, f, ensure_ascii=False, indent=2)
+                print("✅ تم حفظ الملف final_products.json بنجاح!")
+                success = True
+                break
     except Exception:
-        continue # نعبر عالكلمة اللي بعدها إذا فشلت
+        continue
 
 if not success:
-    print("⚠️ ولا كلمة نجحت! المبرمج مستخدم اسم غريب جداً.")
+    print("⚠️ لم نصل للكلمة، أظهر استجابة السيرفر لمعاينتها:")
+    print(json.dumps(data, indent=2, ensure_ascii=False))
 
