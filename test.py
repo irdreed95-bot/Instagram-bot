@@ -8,14 +8,15 @@ headers = {
     "Content-Type": "application/json"
 }
 
-print("🚀 جاري الفحص الذكي التلقائي لحقل الصور...")
+print("🚀 جاري الكشف التلقائي عن كلمة رابط الصورة داخل السيرفر...")
 
-# قائمة بالأسماء المركبة الشائعة في GraphQL
+# قائمة بالأسماء المباشرة والمموهة لتفعيل الاقتراح التلقائي من السيرفر
 candidates = [
-    "FileUrl", "fileUrl", "FullUrl", "fullUrl", "FileName", "fileName", 
-    "Name", "name", "Key", "key", "Location", "location", "URI", "uri", 
-    "Source", "source", "FilePath", "filePath", "OriginalUrl", "originalUrl",
-    "FileLocation", "ImageLocation"
+    "url", "Url", "URL", "path", "Path", "src", "Src", "link", "Link", 
+    "filename", "FileName", "originalName", "key", "Key", "name", "Name",
+    "file", "File", "downloadUrl", "publicUrl", "cdnUrl", "fullUrl",
+    # كلمات مموهة لإجبار GraphQL على كشف اسم الحقل القريب
+    "urll", "pathh", "linkk", "namee", "filee", "srcc", "keyy", "filenamee"
 ]
 
 success = False
@@ -29,16 +30,16 @@ for field in candidates:
         res = requests.post(url, headers=headers, json=payload)
         data = res.json()
         
-        # 1. إذا نجح الكود بدون أي أخطاء
+        # 1. إذا نجح الكود وسحب البيانات بدون أخطاء
         if "errors" not in data and data.get("data"):
-            print(f"\n🎉🎉🎉 أبشرررر! الكلمة الصحيحة لرابط الصورة هي: {field}")
+            print(f"\n🎉🎉🎉 أبشرررر! الكلمة الصحيحة هي: {field}")
             with open("final_products.json", "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
-            print("✅ تم سحب المنتجات كاملة وحفظها بملف final_products.json!")
+            print("✅ تم سحب المنتجات بالكامل (الاسم، السعر، الصور) في final_products.json!")
             success = True
             break
             
-        # 2. إذا طلع خطأ، البايثون راح يبحث بداخل الخطأ عن اقتراح "Did you mean"
+        # 2. إذا لقط الكود اقتراح "Did you mean" من السيرفر
         errors_str = json.dumps(data.get("errors", []))
         match = re.search(r'Did you mean [\\"]*([^"\\]+)[\\"]*\?', errors_str)
         if match:
@@ -62,6 +63,5 @@ for field in candidates:
         continue
 
 if not success:
-    print("⚠️ لم نصل للكلمة، أظهر استجابة السيرفر لمعاينتها:")
-    print(json.dumps(data, indent=2, ensure_ascii=False))
+    print("⚠️ فشلت جميع المحاولات التلقائية، صور الشاشة للنتيجة لتحديد خطوة القادمة.")
 
