@@ -1,35 +1,32 @@
 import json
 
-print("🕵️‍♂️ جاري فحص خريطة السيرفر (Schema) لاكتشاف ثغرة تسجيل الدخول...")
+print("🕵️‍♂️ جاري التفتيش الشامل داخل الخريطة (بدون الاعتماد على ترتيب السيرفر)...")
+
+def find_login_info(obj):
+    # دالة تبحث بكل زوايا الملف عن أي شي بي تسجيل دخول
+    if isinstance(obj, dict):
+        name = obj.get("name")
+        if isinstance(name, str) and any(x in name.lower() for x in ["login", "auth", "signin", "token"]):
+            print(f"\n🎉 لقينا ثغرة الدخول! اسمها: {name}")
+            args = obj.get("args")
+            if args:
+                print("👇 السيرفر يطلب هاي المعلومات حتى نسجل دخول:")
+                for arg in args:
+                    print(f"  - محتاج: {arg.get('name')}")
+        
+        # كمل بحث بالباقي
+        for value in obj.values():
+            find_login_info(value)
+            
+    elif isinstance(obj, list):
+        for item in obj:
+            find_login_info(item)
 
 try:
     with open("graphql_schema.json", "r", encoding="utf-8") as f:
         schema_data = json.load(f)
-        
-        # استخراج أنواع البيانات من الخريطة
-        types = schema_data.get("data", {}).get("__schema", {}).get("types", [])
-        
-        # البحث عن دوال الـ Mutation (الدوّال المسؤولة عن تسجيل الدخول)
-        mutation_found = False
-        for t in types:
-            if t.get("name") in ["Mutation", "RootMutationType"]:
-                fields = t.get("fields", [])
-                for field in fields:
-                    name = field.get("name", "").lower()
-                    if "login" in name or "auth" in name or "signin" in name or "token" in name:
-                        print(f"\n🎉 لقينا دالة الدخول المخفية واسمها: {field['name']}")
-                        args = field.get("args", [])
-                        print("👇 السيرفر يطلب من عندنا هاي المعلومات حتى يعطينا الدخول:")
-                        for arg in args:
-                            arg_type = arg.get("type", {})
-                            while arg_type.get("ofType"):
-                                arg_type = arg_type.get("ofType")
-                            print(f"  - محتاج: {arg.get('name')} (النوع: {arg_type.get('name')})")
-                        mutation_found = True
-                        
-        if not mutation_found:
-            print("\n⚠️ ما لقينا دالة الدخول المباشرة، السيرفر قد يستخدم طريقة ثانية.")
-            
+        find_login_info(schema_data)
+        print("\n✅ انتهى الفحص الشامل!")
 except Exception as e:
-    print(f"❌ خطأ بقراءة الملف: {e}")
+    print(f"❌ خطأ: {e}")
 
