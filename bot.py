@@ -5,12 +5,11 @@ import requests
 from instagrapi import Client
 
 # ==========================================
-# 🔑 ضع معلومات حسابك هنا
-USERNAME = "sharwa._iq"
-PASSWORD = "DREED12345FNR"
+# 🔑 الرمز السري الخاص بك (Session ID)
+SESSION_ID = "الصق_المفتاح_السري_هنا"
 # ==========================================
 
-print("🚀 تشغيل البوت (تسجيل الدخول باليوزر والباسورد)...")
+print("🚀 تشغيل البوت باستخدام مفتاح الجلسة الآمن...")
 
 # 1. قراءة المنتجات
 try:
@@ -27,14 +26,14 @@ if not products:
 
 print(f"📦 تم العثور على {len(products)} منتج.")
 
-# 2. تسجيل الدخول بحسابك
+# 2. تسجيل الدخول بالـ Session ID (بدون طلب تحقق من الهند)
 cl = Client()
 try:
-    print(f"⏳ جاري تسجيل الدخول للحساب {USERNAME} ...")
-    cl.login(USERNAME, PASSWORD)
-    print("✅ تم تسجيل الدخول بنجاح!")
+    print("⏳ جاري تسجيل الدخول بالمفتاح السري الآمن...")
+    cl.login_by_sessionid(SESSION_ID)
+    print("✅ تم تسجيل الدخول بنجاح تام!")
 except Exception as e:
-    print(f"❌ فشل تسجيل الدخول، تأكد من الباسورد أو قد يطلب الانستغرام تأكيد: {e}")
+    print(f"❌ مفتاح الجلسة منتهي الصلاحية أو خطأ: {e}")
     exit()
 
 # 3. نشر المنتجات
@@ -49,7 +48,6 @@ for index, item in enumerate(products):
     
     final_price = original_price + 5000  # إضافة الربح
     
-    # محاولة سحب روابط الصور والفيديوهات من الملف
     media_url = ""
     is_video = False
     images_list = item.get("Images", [])
@@ -68,7 +66,6 @@ for index, item in enumerate(products):
                 media_url = url
                 break
 
-    # إذا ماكو صورة بالملف، نستخدم الفيديو الاحتياطي
     media_path = f"temp_media_{index}.jpg"
     if media_url:
         try:
@@ -107,14 +104,12 @@ for index, item in enumerate(products):
     except Exception as e:
         print(f"❌ خطأ أثناء النشر: {e}")
 
-    # مسح الملفات المؤقتة
     if "temp_media_" in media_path and os.path.exists(media_path):
         os.remove(media_path)
 
-    # استراحة بين منتج ومنتج
     if index < len(products) - 1:
         print("⏳ استراحة 3 دقائق قبل المنتج التالي...")
         time.sleep(180)
 
-print("\n🎉 انتهى البوت من الشغل!")
+print("\n🎉 انتهى البوت من نشر كل المنتجات بنجاح!")
 
