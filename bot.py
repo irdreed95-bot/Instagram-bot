@@ -6,7 +6,8 @@ from instagrapi import Client
 
 # ==========================================
 # 🔑 الرمز السري الخاص بك (Session ID)
-SESSION_ID = "الصق_المفتاح_السري_هنا"
+SESSION_ID = SESSION_ID = "58780692906%3AZUtwc85clhQdUu%3A21%3AAYjsW1fzKHYuHS2a1Lfa4BeoUdFpqYPerv4gUzRewg"
+
 # ==========================================
 
 print("🚀 تشغيل البوت باستخدام مفتاح الجلسة الآمن...")
