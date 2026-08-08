@@ -5,9 +5,8 @@ import time
 from instagrapi import Client
 
 # ==========================================
-# بيانات تسجيل الدخول الخاصة بك
-USERNAME = "dr_e3.7"
-PASSWORD = "DREED123456"
+# 🔑 مفتاح الجلسة (SESSION_ID) الخاص بك - تم إدخاله بدقة
+SESSION_ID = "48878484782%3AB0HBPJKQa0M5m2%3A16%3AAYhhbnzsaAMH0uihHHL6-MWUcXVPpCNU3Xol9-v43Q"
 # ==========================================
 
 FALLBACK_IMAGE = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop"
@@ -16,44 +15,14 @@ print("🚀 جاري الاتصال بانستغرام...")
 
 cl = Client()
 
-# 1. نظام تسجيل الدخول الذكي (تم تصحيح التعرف على المصادقة الثنائية)
+# 1. نظام تسجيل الدخول باستخدام المفتاح السري (لتخطي الحظر والتحقق)
 try:
-    cl.login(USERNAME, PASSWORD)
-    print("✅ تم الاتصال بحساب الانستغرام بنجاح!")
+    print("⏳ جاري تسجيل الدخول...")
+    cl.login_by_sessionid(SESSION_ID)
+    print("✅ تم الاتصال بحساب الانستغرام بنجاح تام وبدون أي تحقق!")
 except Exception as e:
-    error_msg = str(e).lower()
-    
-    # إذا طلب انستغرام الموافقة من الهاتف (Challenge)
-    if "challenge_required" in error_msg or "challenge" in error_msg or "suspicious" in error_msg:
-        print("\n⚠️ انستغرام يطلب التحقق من هويتك!")
-        print("📱 يرجى فتح تطبيق انستغرام في هاتفك الآن والموافقة على طلب الدخول (نعم، هذا أنا).")
-        print("⏳ البوت سينتظر لمدة 60 ثانية لكي تقوم بالموافقة...")
-        
-        time.sleep(60) 
-        
-        print("\n🔄 جاري محاولة تسجيل الدخول مرة أخرى بعد الموافقة...")
-        try:
-            cl.login(USERNAME, PASSWORD)
-            print("✅ تم الاتصال بنجاح بعد التحقق!")
-        except Exception as e2:
-            print(f"❌ فشل تسجيل الدخول مجدداً: {e2}")
-            exit()
-            
-    # إذا كان الحساب مربوطاً بمصادقة ثنائية (تم إضافة كافة صيغ الكلمة لتجنب تجاوزها)
-    elif "two-factor" in error_msg or "two_factor" in error_msg or "2fa" in error_msg or "two factor" in error_msg:
-        print("\n🔐 حسابك محمي بالمصادقة الثنائية (Two-Factor Authentication).")
-        code = input("👉 يرجى كتابة الكود المكون من 6 أرقام (الذي وصلك بـ SMS أو تطبيق المصادقة) واضغط Enter: ")
-        try:
-            # تنظيف الكود من أي مسافات زائدة
-            cl.login(USERNAME, PASSWORD, verification_code=code.strip())
-            print("✅ تم الاتصال بنجاح!")
-        except Exception as e3:
-            print(f"❌ الكود خاطئ أو فشل الاتصال: {e3}")
-            exit()
-            
-    else:
-        print(f"❌ فشل تسجيل الدخول لسبب آخر: {e}")
-        exit()
+    print(f"❌ فشل تسجيل الدخول بالمفتاح السري (تأكد من نسخه بشكل صحيح): {e}")
+    exit()
 
 # 2. قراءة بيانات المنتجات
 try:
@@ -162,4 +131,3 @@ for index, item in enumerate(products, start=1):
         print("==========================================\n")
 
 print("\n🎊 تمت العملية بنجاح! تم المرور على جميع المنتجات.")
-
