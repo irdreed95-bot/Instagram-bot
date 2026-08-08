@@ -6,7 +6,7 @@ from instagrapi import Client
 
 # ==========================================
 # 🔑 مفتاح الجلسة الخاص بك (SESSION_ID)
-SESSION_ID = "58780692906%3AZUtwc85clhQdUu%3A21%3AAYjsW1fzKHYuHS2a1Lfa4BeoUdFpqYPerv4gUzRewg"
+SESSION_ID = "48878484782%3AB0HBPJKQa0M5m2% 3A16%3AAYhhbnzsaAMH0uihHHL6-MW UcXVPpCNU3Xol9-v43Q"
 # ==========================================
 
 FALLBACK_IMAGE = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop"
