@@ -16,7 +16,7 @@ print("🚀 جاري الاتصال بانستغرام...")
 
 cl = Client()
 
-# 1. نظام تسجيل الدخول الذكي (يعالج مشكلة طلب الموافقة من الهاتف)
+# 1. نظام تسجيل الدخول الذكي (تم تصحيح التعرف على المصادقة الثنائية)
 try:
     cl.login(USERNAME, PASSWORD)
     print("✅ تم الاتصال بحساب الانستغرام بنجاح!")
@@ -26,26 +26,26 @@ except Exception as e:
     # إذا طلب انستغرام الموافقة من الهاتف (Challenge)
     if "challenge_required" in error_msg or "challenge" in error_msg or "suspicious" in error_msg:
         print("\n⚠️ انستغرام يطلب التحقق من هويتك!")
-        print("📱 يرجى فتح تطبيق انستغرام في هاتفك الآن.")
-        print("👆 ستجد رسالة 'هل تحاول تسجيل الدخول؟' (Was this you?). اضغط على 'نعم، هذا أنا'.")
+        print("📱 يرجى فتح تطبيق انستغرام في هاتفك الآن والموافقة على طلب الدخول (نعم، هذا أنا).")
         print("⏳ البوت سينتظر لمدة 60 ثانية لكي تقوم بالموافقة...")
         
-        time.sleep(60) # الكود يتوقف هنا لمدة دقيقة بانتظار موافقتك
+        time.sleep(60) 
         
         print("\n🔄 جاري محاولة تسجيل الدخول مرة أخرى بعد الموافقة...")
         try:
             cl.login(USERNAME, PASSWORD)
             print("✅ تم الاتصال بنجاح بعد التحقق!")
         except Exception as e2:
-            print(f"❌ فشل تسجيل الدخول مجدداً، يرجى إعادة تشغيل الكود: {e2}")
+            print(f"❌ فشل تسجيل الدخول مجدداً: {e2}")
             exit()
             
-    # إذا كان الحساب مربوطاً برقم هاتف أو تطبيق مصادقة ثنائية (2FA)
-    elif "two_factor" in error_msg or "2fa" in error_msg or "two factor" in error_msg:
+    # إذا كان الحساب مربوطاً بمصادقة ثنائية (تم إضافة كافة صيغ الكلمة لتجنب تجاوزها)
+    elif "two-factor" in error_msg or "two_factor" in error_msg or "2fa" in error_msg or "two factor" in error_msg:
         print("\n🔐 حسابك محمي بالمصادقة الثنائية (Two-Factor Authentication).")
-        code = input("👉 يرجى كتابة الكود المكون من 6 أرقام الذي وصلك الآن واضغط Enter: ")
+        code = input("👉 يرجى كتابة الكود المكون من 6 أرقام (الذي وصلك بـ SMS أو تطبيق المصادقة) واضغط Enter: ")
         try:
-            cl.login(USERNAME, PASSWORD, verification_code=code)
+            # تنظيف الكود من أي مسافات زائدة
+            cl.login(USERNAME, PASSWORD, verification_code=code.strip())
             print("✅ تم الاتصال بنجاح!")
         except Exception as e3:
             print(f"❌ الكود خاطئ أو فشل الاتصال: {e3}")
@@ -75,21 +75,18 @@ for index, item in enumerate(products, start=1):
     
     name = item.get("Name", "منتج مميز")
     
-    # تسعير المنتج (إضافة 5000 دينار ربح)
     try:
         original_price = int(item.get("RRPPrice", 10000))
     except ValueError:
         original_price = 10000
     final_price = original_price + 5000
 
-    # استخراج الميزات
     features = item.get("Description", "") or item.get("Features", "") 
     if not features:
         features = "منتج عالي الجودة ومميز جداً، اطلبه الآن ولا تفوت الفرصة."
     else:
         features = features[:300] + "..." if len(features) > 300 else features
 
-    # تحديد الوسائط
     media_list = item.get("Images", [])
     video_list = item.get("Videos", []) 
 
@@ -108,7 +105,6 @@ for index, item in enumerate(products, start=1):
         media_url = FALLBACK_IMAGE
         is_video = False
 
-    # تجهيز الكابشن والهاشتاقات
     hashtags = "#فد_شي #عراق #بغداد #تسوق_اونلاين #عروض #اكسبلور #تسوق #العراق #بنات_العراق #تخفيضات"
     caption = f"✨ {name} ✨\n\n📌 الميزات:\n{features}\n\n💰 السعر: {final_price} دينار فقط!\n\nللحجز والاستفسار راسلنا على الخاص 📩\n\n{hashtags}"
 
